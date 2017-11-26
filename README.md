@@ -56,6 +56,12 @@ The `index` field is the URL for the Git index that was setup in the previous
 step.
 
 ## Configuration guide
+Below are the key areas of config, the items in bold are mandatory:
+
+ - **[registry](#registry-config---mandatory)**
+ - **[storage](#registry-config---mandatory)**
+ - [server](#server-config)
+
 ### Registry Config - MANDATORY
 This just has a single entry for the index, which is mandatory, below is an example:
 
@@ -94,7 +100,7 @@ api_key = "ABSSJKDNAKSNCNUuansiasncsMKA..."
 ```
 
 
-### Server config - OPTIONAL
+### Server config
 The server config just has one optional field, this allows setting the port that
 Caesium sets the server up on (by default this is 3000). Below is an example:
 
