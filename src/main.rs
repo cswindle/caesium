@@ -6,6 +6,7 @@ extern crate nom;
 extern crate url;
 #[macro_use]
 extern crate hyper;
+extern crate hyper_tls;
 extern crate futures;
 #[macro_use]
 extern crate serde_derive;

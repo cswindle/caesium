@@ -1,4 +1,5 @@
 
+use errors::*;
 use ::modules;
 
 use std;
