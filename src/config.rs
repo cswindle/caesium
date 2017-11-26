@@ -38,7 +38,13 @@ pub struct CaesiumArtifactoryStorageConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct CaesiumAuthenticationConfig {
+    pub openid: Option<CaesiumOpenIdConfig>,
     pub oauth2: Option<CaesiumOAuth2Config>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CaesiumOpenIdConfig {
+    pub openid_configuration_url: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,8 +81,10 @@ impl CaesiumConfig {
 
     pub fn create_authentication_module(&self) -> Option<Box<modules::authentication::Authentication>> {
         if let Some(ref auth) = self.authentication {
-            if let Some(ref oauth) = auth.oauth2 {
-                Some(Box::new(modules::authentication::oauth2::OAuth2Authentication::new()))
+            if let Some(ref openid) = auth.openid {
+                Some(Box::new(modules::authentication::openid::OpenIdAuthentication::new(&openid.openid_configuration_url)))
+            // } else if let Some(ref oauth) = auth.oauth2 {
+            //     Some(Box::new(modules::authentication::oauth2::OAuth2Authentication::new()))
             } else {
                 None
             }

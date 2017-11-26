@@ -6,4 +6,4 @@ pub trait Authentication {
     fn authenticate(&self, token: &str) -> Result<()>;
 }
 
-pub mod oauth2;
+pub mod openid;
