@@ -39,11 +39,11 @@ struct Caesium {
     // Config
     config: config::CaesiumConfig,
 
-    storage: Box<modules::storage::CrateStorage>,
-
-    // authentication: Option<modules::authentication::Authenticator>,
+    authentication: Option<Box<modules::authentication::Authentication>>,
 
     // authorization: Option<modules::authorization::Authorisor>,
+
+    storage: Box<modules::storage::CrateStorage>,
 }
 
 impl Caesium {
@@ -51,11 +51,13 @@ impl Caesium {
 
         let config = config::CaesiumConfig::new("registry.toml");
         let storage = config.create_storage_module();
+        let authentication = config.create_authentication_module();
 
         Caesium {
             registry: registry::Registry::new(&config.registry.index.clone()),
             config: config,
             storage: storage,
+            authentication: authentication,
         }
     }
 
@@ -68,7 +70,9 @@ impl Caesium {
         //    - Github
         //    - Google
         //    - Gitlab
-        //  - LDAP
+        if let Some(ref authentication) = self.authentication {
+            authentication.authenticate("test")?;
+        }
 
         // Authorize
 

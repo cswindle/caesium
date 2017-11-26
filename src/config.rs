@@ -10,6 +10,7 @@ use toml;
 pub struct CaesiumConfig {
     pub registry: CeasiumRegistryConfig,
     pub storage: CaesiumStorageConfig,
+    pub authentication: Option<CaesiumAuthenticationConfig>,
     pub server: Option<CaesiumServerConfig>,
 }
 
@@ -36,6 +37,20 @@ pub struct CaesiumArtifactoryStorageConfig {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct CaesiumAuthenticationConfig {
+    pub oauth2: Option<CaesiumOAuth2Config>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CaesiumOAuth2Config {
+    pub client_id: String,
+    pub client_secret: String,
+    pub authorization_url: String,
+    pub token_url: String,
+    pub scope: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct CaesiumServerConfig {
     pub port: Option<u16>,
 }
@@ -55,6 +70,18 @@ impl CaesiumConfig {
             Box::new(modules::storage::artifactory::ArtifactoryCrateStorage::new(&artifactory.base_url, &artifactory.api_key))
         } else {
             panic!("No storage config present");
+        }
+    }
+
+    pub fn create_authentication_module(&self) -> Option<Box<modules::authentication::Authentication>> {
+        if let Some(ref auth) = self.authentication {
+            if let Some(ref oauth) = auth.oauth2 {
+                Some(Box::new(modules::authentication::oauth2::OAuth2Authentication::new()))
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }
