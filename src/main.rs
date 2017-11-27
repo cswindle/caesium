@@ -67,10 +67,6 @@ impl Caesium {
         let manifest: registry::CargoManifest = serde_json::from_str(&manifest).unwrap();
 
         // Authenticate
-        //  - OAuth
-        //    - Github
-        //    - Google
-        //    - Gitlab
         if let Some(ref authentication) = self.authentication {
             authentication.authenticate("test")?;
         }
@@ -124,7 +120,12 @@ impl Service for CaesiumService {
 
                         match caesium.publish(manifest, tar) {
                             Ok(_) => Response::new().with_status(StatusCode::Ok),
-                            Err(_) => Response::new().with_status(StatusCode::InternalServerError),
+                            Err(e) => {
+                                match *e.kind() {
+                                    ErrorKind::AuthenticationError(_) => Response::new().with_status(StatusCode::Forbidden),
+                                    _ => Response::new().with_status(StatusCode::InternalServerError),
+                                }
+                            }
                         }
                     }))
             },

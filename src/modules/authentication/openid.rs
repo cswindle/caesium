@@ -12,6 +12,7 @@ use url;
 use serde_json;
 use serde_json::Value;
 
+use futures;
 use futures::Stream;
 use std::str::FromStr;
 use std::io;
@@ -68,6 +69,37 @@ impl OpenIdAuthentication {
 impl authentication::Authentication for OpenIdAuthentication {
     // Authenticate using the token provided by cargo publish.
     fn authenticate(&self, token: &str) -> Result<()> {
+
+        // We need to try and get the userinfo_data here, if it fails then we
+        // are not authenticated.
+        let mut core = tokio_core::reactor::Core::new().unwrap();
+        let handle = core.handle();
+
+        let client = Client::configure()
+            .connector(HttpsConnector::new(4, &handle).unwrap())
+            .build(&handle);
+        let work = client.get(self.userinfo_endpoint.clone())
+            .and_then(|res| {
+                if res.status() != hyper::StatusCode::Ok {
+                    bail!(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("Invalid status code: {}", res.status()),
+                    ));
+                }
+                Ok(res)
+            }).and_then(|res| {
+                res.body().concat2().and_then(move |body| {
+                    let json: Value = serde_json::from_slice(&body).map_err(|e| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            e
+                        )
+                    })?;
+                    Ok(json)
+                })
+            });
+        let user_info = core.run(work).map_err(|err| ErrorKind::AuthenticationError("Failed to authenticate".to_string()))?;
+
         Ok(())
     }
 }

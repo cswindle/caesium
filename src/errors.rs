@@ -9,4 +9,11 @@ error_chain! {
         Hyper(::hyper::Error);
         UriError(::hyper::error::UriError);
     }
+
+    errors {
+        AuthenticationError(v: String) {
+            description("Failed to authenticate"),
+            display("Failed to authenticate: '{}'", v),
+        }
+    }
 }
