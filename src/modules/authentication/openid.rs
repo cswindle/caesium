@@ -6,13 +6,11 @@ use tokio_core;
 use hyper;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
+use hyper::header::{Authorization, Bearer};
 use futures::Future;
-use futures::future;
-use url;
 use serde_json;
 use serde_json::Value;
 
-use futures;
 use futures::Stream;
 use std::str::FromStr;
 use std::io;
@@ -78,7 +76,15 @@ impl authentication::Authentication for OpenIdAuthentication {
         let client = Client::configure()
             .connector(HttpsConnector::new(4, &handle).unwrap())
             .build(&handle);
-        let work = client.get(self.userinfo_endpoint.clone())
+
+        let mut request = hyper::Request::new(hyper::Method::Get, self.userinfo_endpoint.clone());
+        request.headers_mut().set(Authorization(
+            Bearer {
+                token: token.to_string(),
+           }
+        ));
+
+        let work = client.request(request)
             .and_then(|res| {
                 if res.status() != hyper::StatusCode::Ok {
                     bail!(io::Error::new(
@@ -98,7 +104,7 @@ impl authentication::Authentication for OpenIdAuthentication {
                     Ok(json)
                 })
             });
-        let user_info = core.run(work).map_err(|err| ErrorKind::AuthenticationError("Failed to authenticate".to_string()))?;
+        let _user_info = core.run(work).map_err(|_| ErrorKind::AuthenticationError("Failed to authenticate".to_string()))?;
 
         Ok(())
     }

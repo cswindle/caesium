@@ -27,6 +27,7 @@ use errors::*;
 
 use hyper::{Put, StatusCode};
 use hyper::server::{Http, Service, Request, Response};
+use hyper::header::Authorization;
 
 use futures::Stream;
 use futures::Future;
@@ -62,16 +63,16 @@ impl Caesium {
         }
     }
 
-    fn publish(&self, manifest: &str, crate_tar: &[u8]) -> Result<()> {
+    fn publish(&self, manifest: &str, crate_tar: &[u8], token: &str) -> Result<()> {
 
         let manifest: registry::CargoManifest = serde_json::from_str(&manifest).unwrap();
 
         // Authenticate
         if let Some(ref authentication) = self.authentication {
-            authentication.authenticate("test")?;
-        }
+            authentication.authenticate(token)?;
 
-        // Authorize
+            // Authorize, this only makes sense when authenticated
+        }
 
         // Now call into the storage driver to store the crate
         self.storage.upload(&manifest, crate_tar)?;
@@ -110,6 +111,11 @@ impl Service for CaesiumService {
 
                 let mut caesium = self.caesium.clone();
 
+                let token = match req.headers().get::<Authorization<String>>() {
+                    Some(auth_header) => auth_header.0.clone(),
+                    None => panic!("No authorization header found")
+                };
+
                 Box::new(req.body()
                     .fold(Vec::new(), |mut acc, chunk| {
                         acc.extend_from_slice(&*chunk);
@@ -118,7 +124,7 @@ impl Service for CaesiumService {
                     .map(move |body| {
                         let (manifest, tar) = parser::parse_crate_upload(body.as_slice()).unwrap();
 
-                        match caesium.publish(manifest, tar) {
+                        match caesium.publish(manifest, tar, &token) {
                             Ok(_) => Response::new().with_status(StatusCode::Ok),
                             Err(e) => {
                                 match *e.kind() {
