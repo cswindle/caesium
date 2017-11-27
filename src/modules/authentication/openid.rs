@@ -66,7 +66,7 @@ impl OpenIdAuthentication {
 
 impl authentication::Authentication for OpenIdAuthentication {
     // Authenticate using the token provided by cargo publish.
-    fn authenticate(&self, token: &str) -> Result<()> {
+    fn authenticate(&self, token: &str) -> Result<authentication::AuthenticationUserInfo> {
 
         // We need to try and get the userinfo_data here, if it fails then we
         // are not authenticated.
@@ -95,7 +95,7 @@ impl authentication::Authentication for OpenIdAuthentication {
                 Ok(res)
             }).and_then(|res| {
                 res.body().concat2().and_then(move |body| {
-                    let json: Value = serde_json::from_slice(&body).map_err(|e| {
+                    let json: authentication::AuthenticationUserInfo = serde_json::from_slice(&body).map_err(|e| {
                         io::Error::new(
                             io::ErrorKind::Other,
                             e
@@ -104,8 +104,8 @@ impl authentication::Authentication for OpenIdAuthentication {
                     Ok(json)
                 })
             });
-        let _user_info = core.run(work).map_err(|_| ErrorKind::AuthenticationError("Failed to authenticate".to_string()))?;
+        let user_info = core.run(work).map_err(|_| ErrorKind::AuthenticationError("Failed to authenticate".to_string()))?;
 
-        Ok(())
+        Ok(user_info)
     }
 }

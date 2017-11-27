@@ -68,11 +68,13 @@ impl Caesium {
         let manifest: registry::CargoManifest = serde_json::from_str(&manifest).unwrap();
 
         // Authenticate
-        if let Some(ref authentication) = self.authentication {
-            authentication.authenticate(token)?;
+        let userinfo = if let Some(ref authentication) = self.authentication {
+            Some(authentication.authenticate(token)?)
+        } else {
+            None
+        };
 
-            // Authorize, this only makes sense when authenticated
-        }
+        // Authorize
 
         // Now call into the storage driver to store the crate
         self.storage.upload(&manifest, crate_tar)?;
@@ -80,6 +82,11 @@ impl Caesium {
         // Now that everything is stored, we need to update the index file so
         // that the crate is available.
         self.registry.add_crate(&manifest, crate_tar)?;
+
+        let username = userinfo.and_then(|userinfo| userinfo.name)
+                               .unwrap_or("an anonymous user".to_string());
+
+        println!("Crate {} v{} was uploaded by {}", manifest.name, manifest.vers, username);
 
         Ok(())
     }
@@ -107,7 +114,7 @@ impl Service for CaesiumService {
         match (req.method(), req.path()) {
             (&Put, "/api/v1/crates/new") => {
 
-                println!("Handling new");
+                println!("Handling new upload request");
 
                 let mut caesium = self.caesium.clone();
 
