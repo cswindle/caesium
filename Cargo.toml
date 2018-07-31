@@ -1,7 +1,10 @@
 [package]
 authors = ["Chris Swindle <christopher.swindle@metaswitch.com>"]
 name = "caesium"
+license = "MIT"
 version = "0.1.0"
+repository = "https://github.com/cswindle/caesium"
+description = "Caesium is an alternative crate registry for Rust, allowing crates to be publshed directly from Cargo."
 
 [dependencies]
 error-chain = "0.11.0"
