@@ -1,6 +1,5 @@
 [package]
 authors = ["Chris Swindle <christopher.swindle@metaswitch.com>"]
-cargo-features = ["alternative-registries"]
 name = "caesium"
 version = "0.1.0"
 
