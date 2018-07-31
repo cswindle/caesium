@@ -164,8 +164,7 @@ fn main() {
     };
 
     let addr = format!("0.0.0.0:{}", port).parse().unwrap();
-    let mut server = Http::new().bind(&addr, move || Ok(CaesiumService::new(caesium.clone()))).unwrap();
-    server.no_proto();
+    let server = Http::new().bind(&addr, move || Ok(CaesiumService::new(caesium.clone()))).unwrap();
     println!("Listening on http://{} with 1 thread.", server.local_addr().unwrap());
     server.run().unwrap();
 }
