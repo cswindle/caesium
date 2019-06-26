@@ -1,6 +1,6 @@
 # Caesium
 Caesium is an alternative crate registry for Rust, allowing crates to be
-publshed directly from Cargo. Below are the key features of Caesium:
+published directly from Cargo. Below are the key features of Caesium:
 
  - it is designed to fit into different enterprise systems
  - it has a number of areas that modules can implement support for different systems, these are:
